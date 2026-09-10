@@ -136,7 +136,7 @@ export default function Home() {
         <h1>Ein Nachweis.<br /><em>Für jede Verbindung.</em></h1>
         <div className="hero-pitch"><p>Sicherheitsnachweise einmal pflegen, gezielt freigeben und überall aktuell halten.</p><div className="hero-actions"><button className="button button-primary" onClick={openDemo}>Demo anfragen <Arrow /></button><a className="button button-secondary" href="#produkt">Produkt ansehen <Arrow /></a></div></div>
       </div>
-      <div className="hero-status shell"><span><i /> Nachweise verbunden</span><span>Sicherer Datenaustausch</span><span>Nachvollziehbar</span><a href="#produkt">Scrollen <Arrow /></a></div>
+      <div className="hero-status shell"><a href="#produkt">Scrollen <Arrow /></a></div>
     </section>
 
     <section className="statement" aria-label="Produktversprechen"><div className="statement-track"><p>Einmal pflegen.</p><p>Gezielt freigeben.</p><p>Überall aktuell.</p></div></section>
