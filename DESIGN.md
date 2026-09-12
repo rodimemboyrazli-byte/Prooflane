@@ -145,7 +145,11 @@ Login und Arbeitsbereich sind bewusst antizyklisch zur Marketingseite gestaltet.
 
 Die Produktidentität im Arbeitsbereich verwendet eine eigenständige **Control-Stamp-Wortmarke**: ein ultramarines Prüfquadrat mit weißem Achsenzeichen und versetzter Orange-Platte, daneben die zweizeilige Bezeichnung „Prooflane / Operations“. Sie ersetzt Marketing-Balken und das frühere Sticker-Kürzel „OPS“ vollständig.
 
-Die vier Arbeitsbereiche besitzen bewusst unterschiedliche Arbeitsmuster statt einer wiederholten Tabellenansicht: Der Überblick kombiniert Kennzahlen, Prioritäts-Queue und Evidenz-Watch; Nachweise erscheinen als prüfbare Evidenzkarten; Freigaben als horizontale Kundenverbindungen; Maßnahmen als dreispaltiges Status-Board. Auf kleinen Viewports werden diese Muster neu gestapelt, während Statuswechsel und Freigabeaktionen direkt im jeweiligen Kontext bleiben.
+Die fünf Arbeitsbereiche besitzen bewusst unterschiedliche Arbeitsmuster statt einer wiederholten Tabellenansicht: Der Eingang priorisiert automatisch abgeleitete Operations-Signale in einer nummerierten Signalspur; der Überblick kombiniert Kennzahlen, Prioritäts-Queue und Evidenz-Watch; Nachweise erscheinen als prüfbare Evidenzkarten; Freigaben als horizontale Kundenverbindungen; Maßnahmen als dreispaltiges Status-Board. Auf kleinen Viewports werden diese Muster neu gestapelt, während Statuswechsel und Freigabeaktionen direkt im jeweiligen Kontext bleiben.
+
+Als Bedienprinzip dient ein **Customer Operations Cockpit**: globale Suche und Tastaturkürzel verkürzen Wege, eine kompakte Schnellaktionsleiste hält häufige Vorgänge sichtbar, und bereichsspezifische Filter reduzieren große Bestände ohne neue Navigationsebenen. Fristlabels, Freigabebereitschaft, Aktivitätsverlauf und eindeutige Lade- beziehungsweise Fehlerzustände machen Systemzustand und nächste Handlung jederzeit verständlich. Kundenzugriffe werden zweistufig kontrolliert: zuerst wird die sichtbare Nachweismenge festgelegt, danach die eigentliche Freigabe aktiviert.
+
+Der Operations-Eingang bündelt überfällige Maßnahmen, prüfbedürftige oder bald ablaufende Nachweise und unvollständige Kundensichten. Einträge lassen sich direkt öffnen, für den aktuellen Tag ausblenden, wiederherstellen und als CSV exportieren. Kundenkarten zeigen eine errechnete Readiness, liefern kopierbare Briefings und einen geschützten PDF-Bericht. Maßnahmen unterstützen Mehrfachauswahl und transaktionale Statuswechsel; CSV-Exporte in allen operativen Bereichen erleichtern Übergabe und Reporting.
 
 ## Typography
 

@@ -64,8 +64,33 @@ export function updateTask(identity: SessionIdentity, id: string, input: Partial
   return db().prepare("SELECT id, title, assignee, due_date AS dueDate, status, evidence_id AS evidenceId, created_at AS createdAt, updated_at AS updatedAt FROM tasks WHERE id = ? AND organization_id = ?").get(id, identity.organizationId);
 }
 
+export function deleteTask(identity: SessionIdentity, id: string) {
+  const database = db();
+  const task = database.prepare("SELECT id, title FROM tasks WHERE id = ? AND organization_id = ?").get(id, identity.organizationId) as { id: string; title: string } | undefined;
+  if (!task) throw new ApiError(404, "Maßnahme nicht gefunden.", "not_found");
+  database.prepare("DELETE FROM tasks WHERE id = ? AND organization_id = ?").run(id, identity.organizationId);
+  audit(identity, "task", id, "deleted", { title: task.title });
+}
+
+export function updateTasksStatus(identity: SessionIdentity, ids: string[], status: TaskStatus) {
+  const uniqueIds = [...new Set(ids)];
+  if (!uniqueIds.length || uniqueIds.length !== ids.length || uniqueIds.length > 100) throw new ApiError(422, "Ungültige Maßnahmenselektion.", "validation_error");
+  const database = db();
+  const update = database.prepare("UPDATE tasks SET status = ?, updated_at = ? WHERE id = ? AND organization_id = ?");
+  database.transaction(() => {
+    const timestamp = now();
+    for (const id of uniqueIds) {
+      const result = update.run(status, timestamp, id, identity.organizationId);
+      if (!result.changes) throw new ApiError(404, "Eine Maßnahme wurde nicht gefunden.", "not_found");
+      audit(identity, "task", id, "bulk_status_updated", { status });
+    }
+  })();
+  const placeholders = uniqueIds.map(() => "?").join(",");
+  return database.prepare(`SELECT t.id, t.title, t.assignee, t.due_date AS dueDate, t.status, t.evidence_id AS evidenceId, e.title AS evidenceTitle, t.created_at AS createdAt, t.updated_at AS updatedAt FROM tasks t LEFT JOIN evidence e ON e.id = t.evidence_id WHERE t.organization_id = ? AND t.id IN (${placeholders})`).all(identity.organizationId, ...uniqueIds);
+}
+
 export function listCustomers(identity: SessionIdentity) {
-  return db().prepare("SELECT id, company_name AS companyName, contact_email AS contactEmail, scope_description AS scopeDescription, share_state AS shareState, created_at AS createdAt, updated_at AS updatedAt FROM customer_access WHERE organization_id = ? ORDER BY company_name COLLATE NOCASE").all(identity.organizationId);
+  return db().prepare("SELECT c.id, c.company_name AS companyName, c.contact_email AS contactEmail, c.scope_description AS scopeDescription, c.share_state AS shareState, c.created_at AS createdAt, c.updated_at AS updatedAt, (SELECT COUNT(*) FROM customer_evidence_grants g WHERE g.customer_access_id = c.id) AS evidenceCount, (SELECT COUNT(*) FROM customer_evidence_grants g JOIN evidence e ON e.id = g.evidence_id WHERE g.customer_access_id = c.id AND e.status = 'approved') AS currentEvidenceCount FROM customer_access c WHERE c.organization_id = ? ORDER BY c.company_name COLLATE NOCASE").all(identity.organizationId);
 }
 
 export function createCustomer(identity: SessionIdentity, input: { companyName: string; contactEmail: string; scopeDescription: string; shareState: ShareState }) {
@@ -73,14 +98,20 @@ export function createCustomer(identity: SessionIdentity, input: { companyName: 
   const timestamp = now();
   db().prepare("INSERT INTO customer_access (id, organization_id, company_name, contact_email, scope_description, share_state, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").run(id, identity.organizationId, input.companyName, input.contactEmail, input.scopeDescription, input.shareState, timestamp, timestamp);
   audit(identity, "customer_access", id, "created", { shareState: input.shareState });
-  return db().prepare("SELECT id, company_name AS companyName, contact_email AS contactEmail, scope_description AS scopeDescription, share_state AS shareState, created_at AS createdAt, updated_at AS updatedAt FROM customer_access WHERE id = ? AND organization_id = ?").get(id, identity.organizationId);
+  return db().prepare("SELECT c.id, c.company_name AS companyName, c.contact_email AS contactEmail, c.scope_description AS scopeDescription, c.share_state AS shareState, c.created_at AS createdAt, c.updated_at AS updatedAt, 0 AS evidenceCount, 0 AS currentEvidenceCount FROM customer_access c WHERE c.id = ? AND c.organization_id = ?").get(id, identity.organizationId);
 }
 
 export function updateCustomerShare(identity: SessionIdentity, id: string, shareState: ShareState) {
   const result = db().prepare("UPDATE customer_access SET share_state = ?, updated_at = ? WHERE id = ? AND organization_id = ?").run(shareState, now(), id, identity.organizationId);
   if (!result.changes) throw new ApiError(404, "Kundenfreigabe nicht gefunden.", "not_found");
   audit(identity, "customer_access", id, "share_state_updated", { shareState });
-  return db().prepare("SELECT id, company_name AS companyName, contact_email AS contactEmail, scope_description AS scopeDescription, share_state AS shareState, created_at AS createdAt, updated_at AS updatedAt FROM customer_access WHERE id = ? AND organization_id = ?").get(id, identity.organizationId);
+  return db().prepare("SELECT c.id, c.company_name AS companyName, c.contact_email AS contactEmail, c.scope_description AS scopeDescription, c.share_state AS shareState, c.created_at AS createdAt, c.updated_at AS updatedAt, (SELECT COUNT(*) FROM customer_evidence_grants g WHERE g.customer_access_id = c.id) AS evidenceCount, (SELECT COUNT(*) FROM customer_evidence_grants g JOIN evidence e ON e.id = g.evidence_id WHERE g.customer_access_id = c.id AND e.status = 'approved') AS currentEvidenceCount FROM customer_access c WHERE c.id = ? AND c.organization_id = ?").get(id, identity.organizationId);
+}
+
+export function listCustomerEvidenceGrants(identity: SessionIdentity, customerId: string) {
+  const database = db();
+  if (!database.prepare("SELECT id FROM customer_access WHERE id = ? AND organization_id = ?").get(customerId, identity.organizationId)) throw new ApiError(404, "Kundenfreigabe nicht gefunden.", "not_found");
+  return database.prepare("SELECT e.id, e.title, e.area, e.evidence_level AS level, e.valid_until AS validUntil, e.status FROM customer_evidence_grants g JOIN evidence e ON e.id = g.evidence_id WHERE g.customer_access_id = ? AND e.organization_id = ? ORDER BY e.title COLLATE NOCASE").all(customerId, identity.organizationId);
 }
 
 export function replaceCustomerEvidenceGrants(identity: SessionIdentity, customerId: string, evidenceIds: string[]) {
@@ -95,9 +126,13 @@ export function replaceCustomerEvidenceGrants(identity: SessionIdentity, custome
     database.prepare("DELETE FROM customer_evidence_grants WHERE customer_access_id = ?").run(customerId);
     const insert = database.prepare("INSERT INTO customer_evidence_grants (customer_access_id, evidence_id, created_at) VALUES (?, ?, ?)");
     for (const evidenceId of uniqueIds) insert.run(customerId, evidenceId, now());
+    const areas = uniqueIds.length
+      ? database.prepare(`SELECT DISTINCT area FROM evidence WHERE organization_id = ? AND id IN (${uniqueIds.map(() => "?").join(",")}) ORDER BY area COLLATE NOCASE`).all(identity.organizationId, ...uniqueIds) as { area: string }[]
+      : [];
+    database.prepare("UPDATE customer_access SET scope_description = ?, updated_at = ? WHERE id = ? AND organization_id = ?").run(areas.map((entry) => entry.area).join(", "), now(), customerId, identity.organizationId);
   })();
   audit(identity, "customer_access", customerId, "evidence_grants_replaced", { evidenceCount: uniqueIds.length });
-  return database.prepare("SELECT e.id, e.title, e.area, e.evidence_level AS level, e.valid_until AS validUntil, e.status FROM customer_evidence_grants g JOIN evidence e ON e.id = g.evidence_id WHERE g.customer_access_id = ? ORDER BY e.title COLLATE NOCASE").all(customerId);
+  return listCustomerEvidenceGrants(identity, customerId);
 }
 
 export function listAuditLog(identity: SessionIdentity, limit = 50) {

@@ -1,9 +1,22 @@
 import { requireSession, requireWriteRole } from "@/lib/server/auth";
 import { taskStatuses } from "@/lib/server/db/schema";
 import { ApiError, jsonError, oneOf, optionalDate, optionalString, readJson, requireSameOrigin, requiredString } from "@/lib/server/http";
-import { updateTask } from "@/lib/server/workspace";
+import { deleteTask, updateTask } from "@/lib/server/workspace";
 
 export const runtime = "nodejs";
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    requireSameOrigin(request);
+    const identity = await requireSession();
+    requireWriteRole(identity);
+    const { id } = await params;
+    deleteTask(identity, id);
+    return new Response(null, { status: 204 });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {

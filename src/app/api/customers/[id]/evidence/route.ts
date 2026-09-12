@@ -1,8 +1,19 @@
 import { requireSession, requireWriteRole } from "@/lib/server/auth";
 import { ApiError, jsonError, readJson, requireSameOrigin } from "@/lib/server/http";
-import { replaceCustomerEvidenceGrants } from "@/lib/server/workspace";
+import { listCustomerEvidenceGrants, replaceCustomerEvidenceGrants } from "@/lib/server/workspace";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const identity = await requireSession();
+    const { id } = await params;
+    return Response.json({ evidence: listCustomerEvidenceGrants(identity, id) }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
