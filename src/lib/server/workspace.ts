@@ -19,7 +19,7 @@ export function workspaceSummary(identity: SessionIdentity) {
 }
 
 export function listEvidence(identity: SessionIdentity) {
-  return db().prepare("SELECT id, title, area, evidence_level AS level, valid_until AS validUntil, status, version, created_at AS createdAt, updated_at AS updatedAt FROM evidence WHERE organization_id = ? ORDER BY updated_at DESC").all(identity.organizationId);
+  return db().prepare("SELECT e.id, e.title, e.area, e.evidence_level AS level, e.valid_until AS validUntil, e.status, e.version, e.created_at AS createdAt, e.updated_at AS updatedAt, (SELECT COUNT(*) FROM evidence_documents d WHERE d.evidence_id = e.id) AS documentCount FROM evidence e WHERE e.organization_id = ? ORDER BY e.updated_at DESC").all(identity.organizationId);
 }
 
 export function createEvidence(identity: SessionIdentity, input: { title: string; area: string; level: string; validUntil: string | null; status: EvidenceStatus }) {
@@ -27,7 +27,7 @@ export function createEvidence(identity: SessionIdentity, input: { title: string
   const timestamp = now();
   db().prepare("INSERT INTO evidence (id, organization_id, title, area, evidence_level, valid_until, status, created_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(id, identity.organizationId, input.title, input.area, input.level, input.validUntil, input.status, identity.userId, timestamp, timestamp);
   audit(identity, "evidence", id, "created", { status: input.status });
-  return db().prepare("SELECT id, title, area, evidence_level AS level, valid_until AS validUntil, status, version, created_at AS createdAt, updated_at AS updatedAt FROM evidence WHERE id = ? AND organization_id = ?").get(id, identity.organizationId);
+  return db().prepare("SELECT e.id, e.title, e.area, e.evidence_level AS level, e.valid_until AS validUntil, e.status, e.version, e.created_at AS createdAt, e.updated_at AS updatedAt, 0 AS documentCount FROM evidence e WHERE e.id = ? AND e.organization_id = ?").get(id, identity.organizationId);
 }
 
 export function updateEvidence(identity: SessionIdentity, id: string, input: Partial<{ title: string; area: string; level: string; validUntil: string | null; status: EvidenceStatus }>) {
@@ -37,7 +37,7 @@ export function updateEvidence(identity: SessionIdentity, id: string, input: Par
   const timestamp = now();
   db().prepare("UPDATE evidence SET title = ?, area = ?, evidence_level = ?, valid_until = ?, status = ?, version = ?, updated_at = ? WHERE id = ? AND organization_id = ?").run(next.title, next.area, next.level, next.validUntil, next.status, current.version + 1, timestamp, id, identity.organizationId);
   audit(identity, "evidence", id, "updated", { status: next.status, version: current.version + 1 });
-  return db().prepare("SELECT id, title, area, evidence_level AS level, valid_until AS validUntil, status, version, created_at AS createdAt, updated_at AS updatedAt FROM evidence WHERE id = ? AND organization_id = ?").get(id, identity.organizationId);
+  return db().prepare("SELECT e.id, e.title, e.area, e.evidence_level AS level, e.valid_until AS validUntil, e.status, e.version, e.created_at AS createdAt, e.updated_at AS updatedAt, (SELECT COUNT(*) FROM evidence_documents d WHERE d.evidence_id = e.id) AS documentCount FROM evidence e WHERE e.id = ? AND e.organization_id = ?").get(id, identity.organizationId);
 }
 
 export function listTasks(identity: SessionIdentity) {

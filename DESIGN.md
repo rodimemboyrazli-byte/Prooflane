@@ -141,7 +141,7 @@ Die Palette übersetzt industrielle Nüchternheit in eine warme, gut lesbare Pro
 
 ### Authenticated operations palette
 
-Login und Arbeitsbereich sind bewusst antizyklisch zur Marketingseite gestaltet. Graphit (`ops-ink`) trägt Navigation und Zugangskontext, warmes Papier (`ops-page`) die Arbeitsfläche, Ultramarin (`ops-blue`) primäre Aktionen und Fokuszustände, Signal-Orange (`ops-orange`) Handlungsdruck und Identitätsmarker. Signal-Teal aus der Landingpage wird hier nicht wiederverwendet. So liest sich die öffentliche Seite als Erklärung, der eingeloggte Bereich dagegen als konzentriertes Arbeitswerkzeug.
+Login und Arbeitsbereich sind bewusst antizyklisch zur Marketingseite gestaltet. Schwarz trägt ausschließlich die linke Navigation. Reinweiß und ein sehr heller Blauschleier bilden die Arbeitsfläche; Ultramarin (`ops-blue`) übernimmt primäre Aktionen, aktive Zustände, Kennzahlen und tragende Informationsflächen. Signal-Orange (`ops-orange`) bleibt auf kleine Warn- und Identitätsmarker begrenzt. Signal-Teal aus der Landingpage wird hier nicht wiederverwendet. So liest sich die öffentliche Seite als Erklärung, der eingeloggte Bereich dagegen als konzentriertes Arbeitswerkzeug.
 
 Die Produktidentität im Arbeitsbereich verwendet eine eigenständige **Control-Stamp-Wortmarke**: ein ultramarines Prüfquadrat mit weißem Achsenzeichen und versetzter Orange-Platte, daneben die zweizeilige Bezeichnung „Prooflane / Operations“. Sie ersetzt Marketing-Balken und das frühere Sticker-Kürzel „OPS“ vollständig.
 

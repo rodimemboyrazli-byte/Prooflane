@@ -33,7 +33,10 @@ function applyMigrations(database: Database.Database) {
 }
 
 export function db() {
-  if (global.prooflaneDatabase) return global.prooflaneDatabase;
+  if (global.prooflaneDatabase) {
+    applyMigrations(global.prooflaneDatabase);
+    return global.prooflaneDatabase;
+  }
   const path = databasePath();
   if (!existsSync(dirname(path))) mkdirSync(dirname(path), { recursive: true });
   const database = new Database(path);
