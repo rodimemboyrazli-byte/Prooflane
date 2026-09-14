@@ -1,0 +1,38 @@
+{
+  "category": "logo-reveal",
+  "duration_s": 5,
+  "fps": 30,
+  "canvas": { "w": 1920, "h": 1080, "aspect": "16:9" },
+  "style": "Prooflane industrial editorial: quiet Proof-Paper field, technical hairlines and registration marks, Signal-Teal only for the rising three-bar mark. Precise, weighted, and restrained rather than playful.",
+  "palette": ["#f7f8f6", "#14272d", "#167a76", "#0f5c59", "#e8f2f0", "#cdd9d6"],
+  "font": "Manrope",
+  "beats": [0.18, 0.42, 0.68, 1.15, 1.9, 5],
+  "export": "mp4",
+  "asset_needs": [],
+  "block": "spring-pop",
+  "customize": {
+    "source": "The installed spring-pop component is a motion reference only. Apply its explicit from-to overshoot/settle grammar to the existing Prooflane three-bar mark rather than adding a badge.",
+    "logo": "Inline reproduction of the existing Brand component in ../../src/app/page.tsx: three 5px teal bars, increasing 9/16/22px heights, a -10deg skew, and the wordmark 'prooflane'.",
+    "motion": "Three bars rise in visual left-to-right order from their shared baseline with individually controlled scaleY and a 1-2% settle. A technical baseline draws beneath them, then the wordmark arrives from the right with a short opacity/translation reveal."
+  },
+  "content": {
+    "logo": "inline:prooflane-mark-and-wordmark",
+    "tagline": "",
+    "url": "",
+    "layout": {
+      "lockup": "centered slightly above vertical middle; symbol at x=698 and wordmark begins x=850",
+      "baseline": "wide hairline from x=510 to x=1410 at y=646",
+      "registration_marks": "four low-opacity corner ticks set well outside the lockup"
+    },
+    "motion_plan": [
+      { "time": "0.00-0.18", "action": "Paper field and faint technical guides fade to their settled opacity." },
+      { "time": "0.18-0.74", "action": "Bar 1 rises from scaleY 0.08 to 1 with a tightly damped 1% overshoot; opacity reaches 1 independently." },
+      { "time": "0.34-0.90", "action": "Bar 2 repeats with 0.16s offset and slightly more upward travel." },
+      { "time": "0.50-1.06", "action": "Bar 3 repeats with 0.16s offset, completing the ascending mark." },
+      { "time": "0.92-1.35", "action": "Teal baseline draws left-to-right under the mark and resolves to a fine structural line." },
+      { "time": "1.12-1.68", "action": "Wordmark enters from x=-30 and opacity 0, easing to its exact final position while the symbol makes one final 1% settle." },
+      { "time": "1.68-5.00", "action": "Full lockup holds static for legibility; only the already-visible fine framework remains as a quiet finished composition." }
+    ],
+    "proof_times": [0, 0.48, 0.84, 1.36, 2.1, 4.9]
+  }
+}

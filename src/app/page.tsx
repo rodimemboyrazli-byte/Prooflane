@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { FormEvent, KeyboardEvent as ReactKeyboardEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type Audience = "zulieferer" | "abnehmer" | "partner";
 
@@ -46,8 +47,100 @@ function CheckIcon() {
   return <span className="check-icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3.5 8.2 2.7 2.7 6.3-6.1" /></svg></span>;
 }
 
-function Brand() {
-  return <a className="brand" href="#top" aria-label="Prooflane Startseite"><span className="brand-mark" aria-hidden="true"><i /><i /><i /></span><span>prooflane</span></a>;
+function Brand({ className = "" }: { className?: string }) {
+  return <a className={`brand ${className}`.trim()} href="#top" aria-label="Prooflane Startseite"><span className="brand-mark" aria-hidden="true"><i /><i /><i /></span><span>prooflane</span></a>;
+}
+
+declare global {
+  interface Window {
+    __prooflaneLandingIntroSeen?: boolean;
+  }
+}
+
+function LandingIntro() {
+  const [phase, setPhase] = useState<"playing" | "exiting" | "removed">("playing");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const ownsIntroRef = useRef<boolean | null>(null);
+  const exitStartedRef = useRef(false);
+  const animationFrameRef = useRef<number | undefined>(undefined);
+  const logoEndTimerRef = useRef<number | undefined>(undefined);
+  const pauseTimerRef = useRef<number | undefined>(undefined);
+  const removeTimerRef = useRef<number | undefined>(undefined);
+
+  const releaseAfterLogo = () => {
+    if (exitStartedRef.current) return;
+    exitStartedRef.current = true;
+    pauseTimerRef.current = window.setTimeout(() => {
+      setPhase("exiting");
+      removeTimerRef.current = window.setTimeout(() => setPhase("removed"), 880);
+    }, 180);
+  };
+
+  useLayoutEffect(() => {
+    if (ownsIntroRef.current === null) {
+      ownsIntroRef.current = !window.__prooflaneLandingIntroSeen;
+      if (ownsIntroRef.current) window.__prooflaneLandingIntroSeen = true;
+    }
+
+    if (!ownsIntroRef.current) {
+      setPhase("removed");
+      return;
+    }
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reducedRelease = reducedMotion ? window.setTimeout(() => setPhase("removed"), 120) : undefined;
+    if (!reducedMotion) {
+      animationFrameRef.current = window.requestAnimationFrame(() => {
+        animationFrameRef.current = window.requestAnimationFrame(() => {
+          setIsPlaying(true);
+          logoEndTimerRef.current = window.setTimeout(releaseAfterLogo, 1_920);
+        });
+      });
+    }
+    const fallback = window.setTimeout(() => setPhase("removed"), 3_200);
+
+    return () => {
+      if (reducedRelease) window.clearTimeout(reducedRelease);
+      if (animationFrameRef.current) window.cancelAnimationFrame(animationFrameRef.current);
+      if (logoEndTimerRef.current) window.clearTimeout(logoEndTimerRef.current);
+      window.clearTimeout(fallback);
+      if (pauseTimerRef.current) window.clearTimeout(pauseTimerRef.current);
+      if (removeTimerRef.current) window.clearTimeout(removeTimerRef.current);
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    if (phase === "removed") return;
+
+    const root = document.documentElement;
+    const body = document.body;
+    const site = document.querySelector<HTMLElement>(".prooflane-site");
+    const rootOverflow = root.style.overflow;
+    const bodyOverflow = body.style.overflow;
+    const hadInert = site?.hasAttribute("inert") ?? false;
+    const previousAriaHidden = site?.getAttribute("aria-hidden") ?? null;
+
+    root.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    site?.setAttribute("inert", "");
+    site?.setAttribute("aria-hidden", "true");
+
+    return () => {
+      root.style.overflow = rootOverflow;
+      body.style.overflow = bodyOverflow;
+      if (!site) return;
+      if (!hadInert) site.removeAttribute("inert");
+      if (previousAriaHidden === null) site.removeAttribute("aria-hidden");
+      else site.setAttribute("aria-hidden", previousAriaHidden);
+    };
+  }, [phase]);
+
+  if (phase === "removed") return null;
+
+  return <div className={`landing-intro ${isPlaying ? "is-playing" : ""} ${phase === "exiting" ? "is-exiting" : ""}`} aria-hidden="true">
+    <div className="landing-intro-curtain"><i /><i /><i /></div>
+    <Brand className="landing-intro-brand" />
+  </div>;
 }
 
 function DemoModal({ onClose }: { onClose: () => void }) {
@@ -123,7 +216,7 @@ export default function Home() {
     return () => observer.disconnect();
   }, []);
 
-  return <><main className="prooflane-site" id="top">
+  return <><LandingIntro /><main className="prooflane-site" id="top">
     <header className="site-header"><div className="header-inner"><Brand /><nav className={menuOpen ? "main-nav open" : "main-nav"} aria-label="Hauptnavigation"><a href="#produkt" onClick={() => setMenuOpen(false)}>Produkt</a><a href="#rollen" onClick={() => chooseAudience("zulieferer")}>Lösungen</a><a href="mailto:hello@prooflane.de">Kontakt</a><a className="nav-login" href="/anmelden">Anmelden</a><button className="nav-demo" onClick={openDemo}>Demo anfragen <Arrow /></button></nav><button className="menu-button" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? "Navigation schließen" : "Navigation öffnen"} aria-expanded={menuOpen}><i /><i /></button></div></header>
 
     <section className="hero-stage">
@@ -199,6 +292,6 @@ export default function Home() {
 
     <section className="final-cta shell"><h2>Der nächste Fragebogen<br />kann der letzte sein.</h2><div><p>Sehen Sie, wie Prooflane in Ihre Lieferkette passt.</p><button className="button button-light" onClick={openDemo}>Pilotprogramm anfragen <Arrow /></button></div></section>
 
-    <footer className="site-footer"><div className="shell"><div className="footer-brand"><Brand /><p>Security Evidence Exchange für industrielle Lieferketten.</p></div><nav><div><strong>Produkt</strong><a href="#produkt">Ablauf</a><a href="#rollen">Lösungen</a></div><div><strong>Prooflane</strong><a href="/anmelden">Anmelden</a><a href="mailto:hello@prooflane.de">Kontakt</a><span>Datenschutz</span><span>Impressum</span></div></nav><div className="footer-close"><span>© {new Date().getFullYear()} Prooflane</span><span>Für belastbare Verbindungen.</span></div></div></footer>
+    <footer className="site-footer"><div className="shell"><div className="footer-brand"><Brand /><p>Security Evidence Exchange für industrielle Lieferketten.</p></div><nav><div><strong>Produkt</strong><a href="#produkt">Ablauf</a><a href="#rollen">Lösungen</a></div><div><strong>Prooflane</strong><a href="/anmelden">Anmelden</a><a href="mailto:hello@prooflane.de">Kontakt</a><Link href="/datenschutz">Datenschutz</Link><Link href="/impressum">Impressum</Link></div></nav><div className="footer-close"><span>© {new Date().getFullYear()} Prooflane</span><span>Für belastbare Verbindungen.</span></div></div></footer>
   </main>{modalOpen && <DemoModal onClose={closeDemo} />}</>;
 }

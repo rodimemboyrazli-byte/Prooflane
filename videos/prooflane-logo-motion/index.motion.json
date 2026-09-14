@@ -1,0 +1,10 @@
+{
+  "duration": 1.5,
+  "assertions": [
+    { "kind": "appearsBy", "selector": "#bar-one", "bySec": 0.5 },
+    { "kind": "before", "a": "#bar-one", "b": "#bar-two" },
+    { "kind": "before", "a": "#bar-two", "b": "#bar-three" },
+    { "kind": "appearsBy", "selector": "#wordmark", "bySec": 1.3 },
+    { "kind": "staysInFrame", "selector": "#lockup" }
+  ]
+}

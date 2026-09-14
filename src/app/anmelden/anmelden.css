@@ -88,3 +88,6 @@
 .login-card textarea { width: 100%; min-height: 86px; padding: 12px 13px; border: 1px solid #aaa49a; background: var(--access-panel); color: var(--access-ink); font: inherit; font-size: 13px; resize: vertical; }
 .login-card textarea:focus { border-color: var(--access-blue); outline: 3px solid rgba(69, 86, 255, .22); }
 .login-card label span { color: var(--access-muted); font-weight: 500; }
+.login-legal-links { display: flex; gap: 18px; margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--access-line); }
+.login-legal-links a { color: var(--access-muted); font-size: 10px; text-decoration: underline; text-decoration-color: rgba(108, 107, 115, .35); text-underline-offset: 3px; }
+.login-legal-links a:hover { color: var(--access-blue-dark); }
